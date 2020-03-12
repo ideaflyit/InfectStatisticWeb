@@ -1,30 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 	<head>
 		<meta charset="UTF-8">
 		<title>新型冠状病毒</title>
-
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="description" content="2020 wuhan Novel coronavirus">
-
-		<meta name="keywords" content="2020 wuhan Novel coronavirus 武汉肺炎 2019-nCov">
-		<meta name="author" content="cuihuan">
-		<meta name="robots" content="index,follow">
-
 		<link rel="stylesheet" type="text/css" href="./static/css/common.css" />
 		<link rel="stylesheet" type="text/css" href="./static/js/zui/css/zui-theme.css" />
 		<link rel="stylesheet" type="text/css" href="./static/js/zui/css/zui.css" />
 		<link rel="stylesheet" type="text/css" href="./static/js/zui/lib/chosen/chosen.min.css" />
-
 		<script type="text/javascript" src="./static/js/jquery/jquery2.0.min.js"></script>
 		<script type="text/javascript" src="./static/js/common.js"></script>
-
 	</head>
-
 	<body>
-
 		<nav class="navbar navbar-default">
 			<div class="container">
 				<div class="navbar-header">
@@ -33,8 +21,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
-            </button>
-
+           </button>
 				</div>
 				<div id="navbar" class="navbar-collapse collapse">
 					<ul class="nav navbar-nav">
@@ -76,6 +63,12 @@
 	</body>
 
 </html>
+<script type="text/javascript" src="./static/js/zui/js/zui.js"></script>
+<script type="text/javascript" src="./static/js/zui/lib/chosen/chosen.min.js"></script>
+<script type="text/javascript" src="./static/js/echart/echarts4.min.js"></script>
+
+<script type="text/javascript" src="./static/js/echart/echarts.min.js"></script>
+<script type="text/javascript" src="./static/js/echart/china.js"></script>
 <script type="text/javascript">
 	// 将图标实例化和容器关联
 	var myChart = echarts.init(document.querySelector('#map'))
@@ -101,8 +94,8 @@
 			myChart.setOption({
 				title: {
 					// 标题
-					text: 'nCov-全国实例疫情数据分布图',
-					//subtext: '武汉黑马程序员-疫情专题',
+					text: '全国疫情数据图',
+					
 					left: 'center',
 					top: 10
 				},
@@ -146,11 +139,59 @@
 					type: 'map', // 当前图表的类型
 					map: 'china', // 当前地图是中国地图
 					label: {
-						// 覆盖物设置
+						
 						show: true
 					},
 					data: filterData
 				}]
 			})
 		})
+</script>
+<script type="text/javascript">
+	var dataUrl = "https://lab.ahusmart.com/nCoV/";
+	var dataUrlBackup = "https://lab.ahusmart.com/nCoV/";
+
+	$(document).ready(function() {
+		initCoreData();
+		initTrendChart();
+		initAddChart();
+	});
+	var initCoreData = function(province) {
+
+		$.ajax({
+			url: dataUrl + 'api/overall?latest=1',
+			type: 'get',
+			success: function(res) {
+				if(res.success === true) {
+					var data = res.results[0];
+
+					var html = ' 全国疫情数据:\n' +
+						'        <div>' +
+						'<span class="label label-warning data-confirmed">确诊</span>:' + data.confirmedCount + '&nbsp;&nbsp;' +
+						'<span class="label label-success data-cured">治愈</span>:' + data.curedCount + ' &nbsp;&nbsp; ' +
+						'<span class="label label-danger data-dead">死亡</span>:' + data.deadCount + '&nbsp;&nbsp;' +
+						'<span class="label label-info data-dead">疑似</span>:' + data.suspectedCount + '</div>\n' +
+						'  ';
+
+					$(".core-data").html(html);
+
+					return;
+				}
+				alert("获取数据失败");
+
+			},
+			error: function(res) {
+				if(res.state() === "rejected" && !this.url.includes(dataUrlBackup)) {
+					this.url = this.url.replace(dataUrl, dataUrlBackup);
+					$.ajax(this);
+				}
+			}
+		})
+
+	};
+
+	
+	
+
+	
 </script>
