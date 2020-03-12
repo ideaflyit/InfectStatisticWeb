@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+	<head>
+		<meta charset="UTF-8">
+		<title>新型冠状病毒</title>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="2020 wuhan Novel coronavirus">
+
+		<meta name="keywords" content="2020 wuhan Novel coronavirus 武汉肺炎 2019-nCov">
+		<meta name="author" content="cuihuan">
+		<meta name="robots" content="index,follow">
+
+		<link rel="stylesheet" type="text/css" href="./static/css/common.css" />
+		<link rel="stylesheet" type="text/css" href="./static/js/zui/css/zui-theme.css" />
+		<link rel="stylesheet" type="text/css" href="./static/js/zui/css/zui.css" />
+		<link rel="stylesheet" type="text/css" href="./static/js/zui/lib/chosen/chosen.min.css" />
+
+		<script type="text/javascript" src="./static/js/jquery/jquery2.0.min.js"></script>
+		<script type="text/javascript" src="./static/js/common.js"></script>
+
+	</head>
+
+	<body>
+
+		<nav class="navbar navbar-default">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+               
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+				</div>
+				<div id="navbar" class="navbar-collapse collapse">
+					<ul class="nav navbar-nav">
+						<li class="active">
+							<a href="./country.html" target="_self"><i class="icon icon-line-chart"></i> 全国数据</a>
+						</li>
+						<li>
+							<a href="./specific.html" target="_self"><i class="icon icon-th"></i> 分省数据</a>
+						</li>
+
+					</ul>
+
+				</div>
+
+			</div>
+		</nav>
+
+		<div class="container">
+			<div class="alert alert-success core-data" style="height: 100%;text-align: center">
+			</div>
+
+			<hr/>
+			<div id="map" style="width: 800px;height: 600px"></div>
+			<!--增长趋势图-->
+			<div class="chart" id="trend-chart" style="height: 25rem">
+
+			</div>
+			<hr/>
+			<!--增长量-->
+			<div class="chart" id="add-chart" style="height: 25rem">
+
+			</div>
+
+			<hr/>
+			<div class="items">
+			</div>
+		</div>
+
+	</body>
+
+</html>
+<script type="text/javascript">
+	// 将图标实例化和容器关联
+	var myChart = echarts.init(document.querySelector('#map'))
+		// fetch xmlhttprequest
+		// fetchfetch(请求url)不需要引入任何的文件
+	fetch(`http://127.0.0.1:8066/api/data`)
+		.then(res => res.json()) // 把可读数据流转为json格式
+		.then(res => {
+			// console.log(res) // 获取到的疫情数据
+			var getListByCountryTypeService1 = res.getListByCountryTypeService1
+				// 将接口返回的数据进行处理 转为echarts认可的数据
+			var filterData = []
+			getListByCountryTypeService1.forEach(item => {
+					filterData.push({
+						name: item.provinceShortName,
+						value: item.confirmedCount,
+						deadCount: item.deadCount,
+						curedCount: item.curedCount
+					})
+				})
+				// console.log(filterData) // [{name: '湖北', value: 5556,deadCount: 6, curedCount: 4}, ...]
+				// 配置图标数据信息
+			myChart.setOption({
+				title: {
+					// 标题
+					text: 'nCov-全国实例疫情数据分布图',
+					//subtext: '武汉黑马程序员-疫情专题',
+					left: 'center',
+					top: 10
+				},
+				// 图表背景色
+				backgroundColor: '#ddf4df',
+				visualMap: [{
+					type: 'piecewise', // continuous连续的 piecewise分段
+					pieces: [{
+							gt: 10000
+						}, // (10000, Infinity]
+						{
+							gt: 1000,
+							lte: 9999
+						}, // (1000, 9999]
+						{
+							gt: 100,
+							lte: 999
+						}, // (100, 999]
+						{
+							gt: 10,
+							lte: 99
+						}, // (10, 99]
+						{
+							gt: 0,
+							lte: 9
+						} // (0, 9]
+					],
+					inRange: {
+						color: ['#fdebcf', '#f59e83', '#e55a4e', '#cb2a2f', '#811c24']
+					}
+				}],
+				tooltip: {
+					// triggerOn: 'click',
+					formatter: function(params) {
+						// 提示框浮层内容格式器，支持字符串模板和回调函数两种形式
+						// console.log(params, 'formatter')
+						return `地区：${params.name}<br/>确诊：${params.value || 0}人<br/>治愈：${(params.data && params.data.curedCount) || 0}人<br/>死亡：${(params.data && params.data.deadCount) || 0}人<br/>`
+					}
+				},
+				series: [{
+					type: 'map', // 当前图表的类型
+					map: 'china', // 当前地图是中国地图
+					label: {
+						// 覆盖物设置
+						show: true
+					},
+					data: filterData
+				}]
+			})
+		})
+</script>
