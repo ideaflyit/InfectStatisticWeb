@@ -236,6 +236,74 @@
 
 	};
 
+	var initChart = function(province) {
+		$.ajax({
+			url: dataUrl + 'api/area?latest=0&province=' + province,
+			type: 'get',
+			success: function(res) {
+				if(res.success === true) {
+					var chartData = res.results;
+					var dateTrend = [];
+					var dateAdd = [];
+					var confirm = [];
+					var confirmAdd = [];
+					var datalist = [];
+
+					for(var i in chartData) {
+						var dataTime = new Date(chartData[i].updateTime);
+						var showTime = [dataTime.getFullYear(), dataTime.getMonth() + 1, ("0" + dataTime.getDate()).slice(-2)].join('/');
+						if(dateTrend.includes(showTime)) {
+							continue;
+						}
+						if(!datalist[showTime] || datalist[showTime] < chartData[i].confirmedCount) {
+							datalist[showTime] = chartData[i].confirmedCount;
+						}
+
+					}
+
+					// 时间排序
+					const dataListOrdered = {};
+					Object.keys(datalist).sort((function(a, b) {
+						a = a.split('/').join('');
+						b = b.split('/').join('');
+						return a > b ? 1 : a < b ? -1 : 0;
+					})).forEach(function(key) {
+						dataListOrdered[key] = datalist[key];
+					});
+
+					// 使用数据
+					for(var i in dataListOrdered) {
+						dateTrend.push(i);
+						confirm.push(dataListOrdered[i]);
+
+						var t = new Date(i);
+						t.setDate(t.getDate() - 1);
+						var yesterday = [t.getFullYear(), t.getMonth() + 1, ("0" + t.getDate()).slice(-2)].join('/');
+						if(!dataListOrdered[yesterday]) {
+							continue;
+						}
+
+						dateAdd.push(i);
+						confirmAdd.push(dataListOrdered[i] - dataListOrdered[yesterday]);
+					}
+
+					var title = "确诊总量(" + chartData[0].country + "-" + chartData[0].provinceShortName + ")";
+					initTrendChart(dateTrend, confirm, title);
+
+					title = "确诊增量(" + chartData[0].country + "-" + chartData[0].provinceShortName + ")";
+					initAddChart(dateAdd, confirmAdd, title);
+					return;
+				}
+				alert("获取数据失败");
+			},
+			error: function(res) {
+				if(res.state() === "rejected" && !this.url.includes(dataUrlBackup)) {
+					this.url = this.url.replace(dataUrl, dataUrlBackup);
+					$.ajax(this);
+				}
+			}
+		});
+
 
 
 
