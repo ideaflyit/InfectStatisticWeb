@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+	<head>
+		<meta charset="UTF-8">
+		<title>新型冠状病毒</title>
+		<meta charset="utf-8">
+
+		<link rel="stylesheet" type="text/css" href="./static/css/common.css" />
+		<link rel="stylesheet" type="text/css" href="./static/js/zui/css/zui-theme.css" />
+		<link rel="stylesheet" type="text/css" href="./static/js/zui/css/zui.css" />
+		<link rel="stylesheet" type="text/css" href="./static/js/zui/lib/chosen/chosen.min.css" />
+
+		<script type="text/javascript" src="./static/js/jquery/jquery2.0.min.js"></script>
+		<script type="text/javascript" src="./static/js/common.js"></script>
+
+	</head>
+
+	<body>
+		<nav class="navbar navbar-default">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+               		 	<span class="icon-bar"></span>
+                		<span class="icon-bar"></span>
+                		<span class="icon-bar"></span>
+            		</button>
+
+				</div>
+				<div id="navbar" class="navbar-collapse collapse"> 
+					<ul class="nav navbar-nav">
+						<li>
+							<a href="./country.html" target="_self"><i class="icon icon-line-chart"></i> 全国数据</a>
+						</li>
+						<li class="active">
+							<a href="./specific.html" target="_self"><i class="icon icon-th"></i> 分省数据</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+
+		<div class="container">
+			<div class="alert alert-primary" style="height: 100%">
+				各省最新疫情查询（点击选择具体省份）：
+				<div id="provinceChosen"></div>
+			</div>
+
+			<div class="alert alert-success core-data" style="height: 100%;text-align: center">
+			</div>
+
+			<div class="chart" id="trend-chart" style="height: 25rem">
+
+			</div>
+			<div class="chart" id="add-chart" style="height: 25rem">
+
+			</div>
+			<hr/>
+
+			<div class="cities" style="height: 100%;">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>城市</th>
+							<th>确诊</th>
+							<th>治愈</th>
+							<th>死亡</th>
+						</tr>
+					</thead>
+					<tbody class="cities-body"></tbody>
+
+				</table>
+			</div>
+
+			<hr/>
+			<div class="items">
+			</div>
+		</div>
+		
+	</body>
+
+</html>
+<script type="text/javascript" src="./static/js/zui/js/zui.js"></script>
+<script type="text/javascript" src="./static/js/zui/lib/chosen/chosen.min.js"></script>
+<script type="text/javascript" src="./static/js/echart/echarts4.min.js"></script>
+<script type="text/javascript">
+	var dataUrl = "https://lab.ahusmart.com/nCoV/";
+	var dataUrlBackup = "https://lab.ahusmart.com/nCoV/";
+
+	$(document).ready(function() {
+		initChosen();
+		initNews('湖北省');
+		initCoreData('湖北省');
+		initChart('湖北省');
+		initAddChart('湖北省');
+	});
+
+
+
+
+
+
+	// };
+</script>
