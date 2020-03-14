@@ -1,30 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 	<head>
 		<meta charset="UTF-8">
 		<title>新型冠状病毒</title>
-
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="description" content="2020 wuhan Novel coronavirus">
-
-		<meta name="keywords" content="2020 wuhan Novel coronavirus 武汉肺炎 2019-nCov">
-		<meta name="author" content="cuihuan">
-		<meta name="robots" content="index,follow">
-
 		<link rel="stylesheet" type="text/css" href="./static/css/common.css" />
 		<link rel="stylesheet" type="text/css" href="./static/js/zui/css/zui-theme.css" />
 		<link rel="stylesheet" type="text/css" href="./static/js/zui/css/zui.css" />
 		<link rel="stylesheet" type="text/css" href="./static/js/zui/lib/chosen/chosen.min.css" />
-
 		<script type="text/javascript" src="./static/js/jquery/jquery2.0.min.js"></script>
 		<script type="text/javascript" src="./static/js/common.js"></script>
-
 	</head>
-
 	<body>
-
 		<nav class="navbar navbar-default">
 			<div class="container">
 				<div class="navbar-header">
@@ -33,8 +21,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
-            </button>
-
+           </button>
 				</div>
 				<div id="navbar" class="navbar-collapse collapse">
 					<ul class="nav navbar-nav">
@@ -57,13 +44,16 @@
 			</div>
 
 			<hr/>
-			<div id="map" style="width: 800px;height: 600px"></div>
-			<!--增长趋势图-->
+			
+			<div  id="map" style="width: 800px;height: 600px;margin: 0 auto;" ></div>
+			<hr/>
+			
+			
 			<div class="chart" id="trend-chart" style="height: 25rem">
 
 			</div>
 			<hr/>
-			<!--增长量-->
+			
 			<div class="chart" id="add-chart" style="height: 25rem">
 
 			</div>
@@ -76,17 +66,22 @@
 	</body>
 
 </html>
+<script type="text/javascript" src="./static/js/zui/js/zui.js"></script>
+<script type="text/javascript" src="./static/js/zui/lib/chosen/chosen.min.js"></script>
+<script type="text/javascript" src="./static/js/echart/echarts4.min.js"></script>
+
+<script type="text/javascript" src="./static/js/echart/echarts.min.js"></script>
+<script type="text/javascript" src="./static/js/echart/china.js"></script>
 <script type="text/javascript">
 	// 将图标实例化和容器关联
 	var myChart = echarts.init(document.querySelector('#map'))
-		// fetch xmlhttprequest
-		// fetchfetch(请求url)不需要引入任何的文件
+		
 	fetch(`http://127.0.0.1:8066/api/data`)
 		.then(res => res.json()) // 把可读数据流转为json格式
 		.then(res => {
-			// console.log(res) // 获取到的疫情数据
+			
 			var getListByCountryTypeService1 = res.getListByCountryTypeService1
-				// 将接口返回的数据进行处理 转为echarts认可的数据
+				// 将接口返回的数据进行处理 
 			var filterData = []
 			getListByCountryTypeService1.forEach(item => {
 					filterData.push({
@@ -96,13 +91,13 @@
 						curedCount: item.curedCount
 					})
 				})
-				// console.log(filterData) // [{name: '湖北', value: 5556,deadCount: 6, curedCount: 4}, ...]
+				
 				// 配置图标数据信息
 			myChart.setOption({
 				title: {
 					// 标题
-					text: 'nCov-全国实例疫情数据分布图',
-					//subtext: '武汉黑马程序员-疫情专题',
+					text: '全国疫情数据图',
+					
 					left: 'center',
 					top: 10
 				},
@@ -135,22 +130,650 @@
 					}
 				}],
 				tooltip: {
-					// triggerOn: 'click',
+					
 					formatter: function(params) {
-						// 提示框浮层内容格式器，支持字符串模板和回调函数两种形式
-						// console.log(params, 'formatter')
+						
 						return `地区：${params.name}<br/>确诊：${params.value || 0}人<br/>治愈：${(params.data && params.data.curedCount) || 0}人<br/>死亡：${(params.data && params.data.deadCount) || 0}人<br/>`
 					}
 				},
 				series: [{
-					type: 'map', // 当前图表的类型
-					map: 'china', // 当前地图是中国地图
+					type: 'map', 
+					map: 'china', // 中国地图
 					label: {
-						// 覆盖物设置
+						
 						show: true
 					},
 					data: filterData
 				}]
 			})
 		})
+</script>
+<script type="text/javascript">
+	var dataUrl = "https://lab.ahusmart.com/nCoV/";
+	var dataUrlBackup = "https://lab.ahusmart.com/nCoV/";
+
+	$(document).ready(function() {
+		initCoreData();
+		initTrendChart();
+		initAddChart();
+	});
+	var initCoreData = function(province) {
+
+		$.ajax({
+			url: dataUrl + 'api/overall?latest=1',
+			type: 'get',
+			success: function(res) {
+				if(res.success === true) {
+					var data = res.results[0];
+
+					var html = ' 全国疫情数据:\n' +
+						'        <div>' +
+						'<span class="label label-warning data-confirmed">确诊</span>:' + data.confirmedCount + '&nbsp;&nbsp;' +
+						'<span class="label label-success data-cured">治愈</span>:' + data.curedCount + ' &nbsp;&nbsp; ' +
+						'<span class="label label-danger data-dead">死亡</span>:' + data.deadCount + '&nbsp;&nbsp;' +
+						'<span class="label label-info data-dead">疑似</span>:' + data.suspectedCount + '</div>\n' +
+						'  ';
+
+					$(".core-data").html(html);
+
+					return;
+				}
+				alert("获取数据失败");
+
+			},
+			error: function(res) {
+				if(res.state() === "rejected" && !this.url.includes(dataUrlBackup)) {
+					this.url = this.url.replace(dataUrl, dataUrlBackup);
+					$.ajax(this);
+				}
+			}
+		})
+
+	};
+
+	var initTrendChart = function() {
+		$.ajax({
+			url: dataUrl + 'api/overall?latest=0',
+			type: 'get',
+			success: function(res) {
+				if(res.success === true) {
+					var chartData = res.results;
+					var date = [];
+					var dataNCoV = [];
+					var confirmedNCoV = [];
+					var suspectedNCoV = [];
+					var curedNCoV = [];
+					var deadNCoV = [];
+
+					// init pre data
+					dataNCoV['2020/1/24'] = {
+						"confirm": 897,
+						"suspect": 1076,
+						"cure": 36,
+						"dead": 26
+					};
+					dataNCoV['2020/1/25'] = {
+						"confirm": 1408,
+						"suspect": 2032,
+						"cure": 39,
+						"dead": 42
+					};
+					dataNCoV['2020/1/26'] = {
+						"confirm": 2076,
+						"suspect": 2692,
+						"cure": 49,
+						"dead": 56
+					};
+					dataNCoV['2020/1/27'] = {
+						"confirm": 2857,
+						"suspect": 5794,
+						"cure": 56,
+						"dead": 82
+					};
+					dataNCoV['2020/1/28'] = {
+						"confirm": 4630,
+						"suspect": 6973,
+						"cure": 73,
+						"dead": 106
+					};
+
+					for(var i in chartData) {
+						var dataTime = new Date(chartData[i].updateTime);
+						var showTime = [dataTime.getFullYear(), dataTime.getMonth() + 1, ("0" + dataTime.getDate()).slice(-2)].join('/');
+						var confirmedCount = chartData[i].confirmedCount ? chartData[i].confirmedCount : chartData[i].confirmed;
+						var suspectedCount = chartData[i].suspectedCount ? chartData[i].suspectedCount : chartData[i].suspectedCount;
+						var curedCount = chartData[i].curedCount ? chartData[i].curedCount : chartData[i].curedCount;
+						var deadCount = chartData[i].deadCount ? chartData[i].deadCount : chartData[i].deadCount;
+
+						if(!dataNCoV[showTime] || dataNCoV[showTime]['confirm'] < confirmedCount) {
+							dataNCoV[showTime] = [];
+							dataNCoV[showTime]['confirm'] = confirmedCount;
+							dataNCoV[showTime]['suspect'] = suspectedCount;
+							dataNCoV[showTime]['cure'] = curedCount;
+							dataNCoV[showTime]['dead'] = deadCount;
+						}
+
+					}
+
+					// 时间排序
+					const dataNCoVOrdered = {};
+					Object.keys(dataNCoV).sort((function(a, b) {
+						a = a.split('/').join('');
+						b = b.split('/').join('');
+						return a > b ? 1 : a < b ? -1 : 0;
+					})).forEach(function(key) {
+						dataNCoVOrdered[key] = dataNCoV[key];
+					});
+
+					// use data
+					for(var i in dataNCoVOrdered) {
+						date.push(i);
+						confirmedNCoV.push(dataNCoVOrdered[i]['confirm']);
+						suspectedNCoV.push(dataNCoVOrdered[i]['suspect']);
+						curedNCoV.push(dataNCoVOrdered[i]['cure']);
+						deadNCoV.push(dataNCoVOrdered[i]['dead']);
+					}
+
+					initDetailChart(date, confirmedNCoV, suspectedNCoV, curedNCoV, deadNCoV);
+					return;
+				}
+				alert("获取数据失败");
+			},
+			error: function(res) {
+				if(res.state() === "rejected" && !this.url.includes(dataUrlBackup)) {
+					this.url = this.url.replace(dataUrl, dataUrlBackup);
+					$.ajax(this);
+				}
+			}
+		});
+
+		var initDetailChart = function(date, confirmedNCoV, suspectedNCoV, curedNCoV, deadNCoV) {
+			var orderTraceContainer = echarts.init(document.getElementById('trend-chart'));
+			orderTraceContainer.showLoading({
+				text: '加载中...',
+				effect: 'whirling'
+			});
+
+			echartsOption = {
+				backgroundColor: '#ddf4df',
+				title: {
+					text: '全国总量',
+					textStyle: {
+						fontWeight: 'normal',
+						fontSize: 12,
+						color: '#161916'
+					},
+					left: '2%'
+				},
+				tooltip: {
+					trigger: 'axis',
+					axisPointer: {
+						lineStyle: {
+							color: '#57617B'
+						}
+					}
+				},
+				legend: {
+					icon: 'rect',
+					itemWidth: 14,
+					itemHeight: 5,
+					itemGap: 1,
+					data: ['确诊', '治愈', '死亡'],
+					right: '2%',
+					textStyle: {
+						fontSize: 12,
+						color: '#161916'
+					}
+				},
+				grid: {
+					left: '2%',
+					right: '2%',
+					bottom: '2%',
+					containLabel: true
+				},
+				xAxis: [{
+					type: 'category',
+					boundaryGap: false,
+					axisLine: {
+						lineStyle: {
+							color: '#57617B'
+						}
+					},
+					data: date
+				}],
+				yAxis: [{
+					type: 'value',
+					axisTick: {
+						show: false
+					},
+					axisLine: {
+						lineStyle: {
+							color: '#57617B'
+						}
+					},
+					axisLabel: {
+						margin: 4,
+						textStyle: {
+							fontSize: 8
+						}
+					},
+					splitLine: {
+						lineStyle: {
+							color: '#161916'
+						}
+					}
+				}],
+				series: [{
+					name: '确诊',
+					type: 'line',
+					smooth: true,
+					symbol: 'circle',
+					symbolSize: 5,
+					showAllSymbol: false,
+					lineStyle: {
+						normal: {
+							width: 1
+						}
+					},
+					label: {
+						show: true,
+						position: 'top',
+						textStyle: {
+							color: '#fff'
+						}
+					},
+
+					areaStyle: {
+						normal: {
+							color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+								offset: 0,
+								color: 'rgba(137, 189, 27, 0.3)'
+							}, {
+								offset: 0.8,
+								color: 'rgba(137, 189, 27, 0)'
+							}], false),
+							shadowColor: 'rgba(0, 0, 0, 0.1)',
+							shadowBlur: 10
+						}
+					},
+					itemStyle: {
+						normal: {
+							color: '#f1a325',
+							borderColor: 'rgba(137,189,2,0.27)',
+							borderWidth: 12
+
+						}
+					},
+					data: confirmedNCoV
+				}, {
+					name: '治愈',
+					type: 'line',
+					smooth: true,
+					symbol: 'circle',
+					symbolSize: 5,
+					showSymbol: false,
+					lineStyle: {
+						normal: {
+							width: 1
+						}
+					},
+					areaStyle: {
+						normal: {
+							color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+								offset: 0,
+								color: 'rgba(0, 136, 212, 0.3)'
+							}, {
+								offset: 0.8,
+								color: 'rgba(0, 136, 212, 0)'
+							}], false),
+							shadowColor: 'rgba(0, 0, 0, 0.1)',
+							shadowBlur: 10
+						}
+					},
+					itemStyle: {
+						normal: {
+							color: '#38b03f',
+							borderColor: 'rgba(0,136,212,0.2)',
+							borderWidth: 12
+
+						}
+					},
+					data: curedNCoV
+				}, {
+					name: '死亡',
+					type: 'line',
+					smooth: true,
+					symbol: 'circle',
+					symbolSize: 5,
+					showSymbol: false,
+					lineStyle: {
+						normal: {
+							width: 1
+						}
+					},
+					areaStyle: {
+						normal: {
+							color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+								offset: 0,
+								color: 'rgba(0, 136, 212, 0.3)'
+							}, {
+								offset: 0.8,
+								color: 'rgba(0, 136, 212, 0)'
+							}], false),
+							shadowColor: 'rgba(0, 0, 0, 0.1)',
+							shadowBlur: 10
+						}
+					},
+					itemStyle: {
+						normal: {
+							color: '#ea644a',
+							borderColor: 'rgba(0,136,212,0.2)',
+							borderWidth: 12
+
+						}
+					},
+					data: deadNCoV
+				}]
+			};
+			orderTraceContainer.hideLoading();
+			orderTraceContainer.setOption(echartsOption);
+		}
+	};
+	
+	var initAddChart = function() {
+		$.ajax({
+			url: dataUrl + 'api/overall?latest=0',
+			type: 'get',
+			success: function(res) {
+				if(res.success === true) {
+					var chartData = res.results;
+					var date = [];
+					var dataNCoV = [];
+					var confirmedNCoV = [];
+					var suspectedNCoV = [];
+					var curedNCoV = [];
+					var deadNCoV = [];
+
+					// init pre data
+					dataNCoV['2020/1/24'] = {
+						"confirm": 897,
+						"suspect": 1076,
+						"cure": 36,
+						"dead": 26
+					};
+					dataNCoV['2020/1/25'] = {
+						"confirm": 1408,
+						"suspect": 2032,
+						"cure": 39,
+						"dead": 42
+					};
+					dataNCoV['2020/1/26'] = {
+						"confirm": 2076,
+						"suspect": 2692,
+						"cure": 49,
+						"dead": 56
+					};
+					dataNCoV['2020/1/27'] = {
+						"confirm": 2857,
+						"suspect": 5794,
+						"cure": 56,
+						"dead": 82
+					};
+					dataNCoV['2020/1/28'] = {
+						"confirm": 4630,
+						"suspect": 6973,
+						"cure": 73,
+						"dead": 106
+					};
+
+					for(var i in chartData) {
+						var dataTime = new Date(chartData[i].updateTime);
+						var showTime = [dataTime.getFullYear(), dataTime.getMonth() + 1, ("0" + dataTime.getDate()).slice(-2)].join('/');
+						var confirmedCount = chartData[i].confirmedCount ? chartData[i].confirmedCount : chartData[i].confirmed;
+						var suspectedCount = chartData[i].suspectedCount ? chartData[i].suspectedCount : chartData[i].suspectedCount;
+						var curedCount = chartData[i].curedCount ? chartData[i].curedCount : chartData[i].curedCount;
+						var deadCount = chartData[i].deadCount ? chartData[i].deadCount : chartData[i].deadCount;
+
+						if(!dataNCoV[showTime] || dataNCoV[showTime]['confirm'] < confirmedCount) {
+							dataNCoV[showTime] = [];
+							dataNCoV[showTime]['confirm'] = confirmedCount;
+							dataNCoV[showTime]['suspect'] = suspectedCount;
+							dataNCoV[showTime]['cure'] = curedCount;
+							dataNCoV[showTime]['dead'] = deadCount;
+						}
+
+					}
+
+					// 时间排序
+					const dataNCoVOrdered = {};
+					Object.keys(dataNCoV).sort(function(a, b) {
+						a = a.split('/').join('');
+						b = b.split('/').join('');
+						return a > b ? 1 : a < b ? -1 : 0;
+					}).forEach(function(key) {
+						dataNCoVOrdered[key] = dataNCoV[key];
+					});
+
+					// use data
+					for(var i in dataNCoVOrdered) {
+
+						var t = new Date(i);
+						t.setDate(t.getDate() - 1);
+						var yesterday = [t.getFullYear(), t.getMonth() + 1, ("0" + t.getDate()).slice(-2)].join('/');
+						if(!dataNCoVOrdered[yesterday]) {
+							continue;
+						}
+
+						date.push(i);
+						confirmedNCoV.push(dataNCoVOrdered[i]['confirm'] - dataNCoVOrdered[yesterday]['confirm']);
+						suspectedNCoV.push(dataNCoVOrdered[i]['suspect'] - dataNCoVOrdered[yesterday]['suspect']);
+						curedNCoV.push(dataNCoVOrdered[i]['cure'] - dataNCoVOrdered[yesterday]['cure']);
+						deadNCoV.push(dataNCoVOrdered[i]['dead'] - dataNCoVOrdered[yesterday]['dead']);
+					}
+
+					initDetailChart(date, confirmedNCoV, suspectedNCoV, curedNCoV, deadNCoV);
+					return;
+				}
+				alert("获取数据失败");
+			},
+			error: function(res) {
+				if(res.state() === "rejected" && !this.url.includes(dataUrlBackup)) {
+					this.url = this.url.replace(dataUrl, dataUrlBackup);
+					$.ajax(this);
+				}
+			}
+		});
+
+		var initDetailChart = function(date, confirmedNCoV, suspectedNCoV, curedNCoV, deadNCoV) {
+			var orderTraceContainer = echarts.init(document.getElementById('add-chart'));
+			orderTraceContainer.showLoading({
+				text: '加载中...',
+				effect: 'whirling'
+			});
+
+			echartsOption = {
+				backgroundColor: '#ddf4df',
+				title: {
+					text: '全国新增量',
+					textStyle: {
+						fontWeight: 'normal',
+						fontSize: 12,
+						color: '#161916'
+					},
+					left: '2%'
+				},
+				tooltip: {
+					trigger: 'axis',
+					axisPointer: {
+						lineStyle: {
+							color: '#161916'
+						}
+					}
+				},
+				legend: {
+					icon: 'rect',
+					itemWidth: 14,
+					itemHeight: 5,
+					itemGap: 1,
+					data: ['确诊', '治愈', '死亡'],
+					right: '2%',
+					textStyle: {
+						fontSize: 12,
+						color: '#161916'
+					}
+				},
+				grid: {
+					left: '2%',
+					right: '2%',
+					bottom: '2%',
+					containLabel: true
+				},
+				xAxis: [{
+					type: 'category',
+					boundaryGap: false,
+					axisLine: {
+						lineStyle: {
+							color: '#57617B'
+						}
+					},
+					data: date
+				}],
+				yAxis: [{
+					type: 'value',
+					axisTick: {
+						show: false
+					},
+					axisLine: {
+						lineStyle: {
+							color: '#57617B'
+						}
+					},
+					axisLabel: {
+						margin: 4,
+						textStyle: {
+							fontSize: 8
+						}
+					},
+					splitLine: {
+						lineStyle: {
+							color: '#57617B'
+						}
+					}
+				}],
+				series: [{
+					name: '确诊',
+					type: 'line',
+					smooth: true,
+					symbol: 'circle',
+					symbolSize: 5,
+					showAllSymbol: false,
+					lineStyle: {
+						normal: {
+							width: 1
+						}
+					},
+					label: {
+						show: true,
+						position: 'top',
+						textStyle: {
+							color: '#161916'
+						}
+					},
+					areaStyle: {
+						normal: {
+							color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+								offset: 0,
+								color: 'rgba(137, 189, 27, 0.3)'
+							}, {
+								offset: 0.8,
+								color: 'rgba(137, 189, 27, 0)'
+							}], false),
+							shadowColor: 'rgba(0, 0, 0, 0.1)',
+							shadowBlur: 10
+						}
+					},
+					itemStyle: {
+						normal: {
+							color: '#f1a325',
+							borderColor: 'rgba(137,189,2,0.27)',
+							borderWidth: 12
+
+						}
+					},
+					data: confirmedNCoV
+				}, {
+					name: '治愈',
+					type: 'line',
+					smooth: true,
+					symbol: 'circle',
+					symbolSize: 5,
+					showSymbol: false,
+					lineStyle: {
+						normal: {
+							width: 1
+						}
+					},
+					areaStyle: {
+						normal: {
+							color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+								offset: 0,
+								color: 'rgba(0, 136, 212, 0.3)'
+							}, {
+								offset: 0.8,
+								color: 'rgba(0, 136, 212, 0)'
+							}], false),
+							shadowColor: 'rgba(0, 0, 0, 0.1)',
+							shadowBlur: 10
+						}
+					},
+					itemStyle: {
+						normal: {
+							color: '#38b03f',
+							borderColor: 'rgba(0,136,212,0.2)',
+							borderWidth: 12
+
+						}
+					},
+					data: curedNCoV
+				}, {
+					name: '死亡',
+					type: 'line',
+					smooth: true,
+					symbol: 'circle',
+					symbolSize: 5,
+					showSymbol: false,
+					lineStyle: {
+						normal: {
+							width: 1
+						}
+					},
+					areaStyle: {
+						normal: {
+							color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+								offset: 0,
+								color: 'rgba(0, 136, 212, 0.3)'
+							}, {
+								offset: 0.8,
+								color: 'rgba(0, 136, 212, 0)'
+							}], false),
+							shadowColor: 'rgba(0, 0, 0, 0.1)',
+							shadowBlur: 10
+						}
+					},
+					itemStyle: {
+						normal: {
+							color: '#ea644a',
+							borderColor: 'rgba(0,136,212,0.2)',
+							borderWidth: 12
+
+						}
+					},
+					data: deadNCoV
+				}]
+			};
+			orderTraceContainer.hideLoading();
+			orderTraceContainer.setOption(echartsOption);
+		}
+	};
+	
 </script>
