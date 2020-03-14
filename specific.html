@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+	<head>
+		<meta charset="UTF-8">
+		<title>新型冠状病毒</title>
+		<meta charset="utf-8">
+
+		<link rel="stylesheet" type="text/css" href="./static/css/common.css" />
+		<link rel="stylesheet" type="text/css" href="./static/js/zui/css/zui-theme.css" />
+		<link rel="stylesheet" type="text/css" href="./static/js/zui/css/zui.css" />
+		<link rel="stylesheet" type="text/css" href="./static/js/zui/lib/chosen/chosen.min.css" />
+
+		<script type="text/javascript" src="./static/js/jquery/jquery2.0.min.js"></script>
+		<script type="text/javascript" src="./static/js/common.js"></script>
+
+	</head>
+
+	<body>
+		<nav class="navbar navbar-default">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+               		 	<span class="icon-bar"></span>
+                		<span class="icon-bar"></span>
+                		<span class="icon-bar"></span>
+            		</button>
+
+				</div>
+				<div id="navbar" class="navbar-collapse collapse"> 
+					<ul class="nav navbar-nav">
+						<li>
+							<a href="./country.html" target="_self"><i class="icon icon-line-chart"></i> 全国数据</a>
+						</li>
+						<li class="active">
+							<a href="./specific.html" target="_self"><i class="icon icon-th"></i> 分省数据</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+
+		<div class="container">
+			<div class="alert alert-primary" style="height: 100%">
+				各省最新疫情查询（点击选择具体省份）：
+				<div id="provinceChosen"></div>
+			</div>
+
+			<div class="alert alert-success core-data" style="height: 100%;text-align: center">
+			</div>
+
+			<div class="chart" id="trend-chart" style="height: 25rem">
+
+			</div>
+			<div class="chart" id="add-chart" style="height: 25rem">
+
+			</div>
+			<hr/>
+
+			<div class="cities" style="height: 100%;">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>城市</th>
+							<th>确诊</th>
+							<th>治愈</th>
+							<th>死亡</th>
+						</tr>
+					</thead>
+					<tbody class="cities-body"></tbody>
+
+				</table>
+			</div>
+
+			<hr/>
+			<div class="items">
+			</div>
+		</div>
+		
+	</body>
+
+</html>
+<script type="text/javascript" src="./static/js/zui/js/zui.js"></script>
+<script type="text/javascript" src="./static/js/zui/lib/chosen/chosen.min.js"></script>
+<script type="text/javascript" src="./static/js/echart/echarts4.min.js"></script>
+<script type="text/javascript">
+	var dataUrl = "https://lab.ahusmart.com/nCoV/";
+	var dataUrlBackup = "https://lab.ahusmart.com/nCoV/";
+
+	$(document).ready(function() {
+		initChosen();
+		initNews('湖北省');
+		initCoreData('湖北省');
+		initChart('湖北省');
+		initAddChart('湖北省');
+	});
+
+	var initNews = function(province) {  //显示该省最新动态及实时资讯
+		$.ajax({
+			url: dataUrl + 'api/news?province=' + province,  //api接口
+			type: 'get',
+			success: function(res) {
+				if(res.success === true) {
+					var news = res.results;
+					var html = "";  //页面html代码
+					for(var i in news) {  //遍历爬取到的数据，按照一定格式添加到html代码里面
+						html += '<div class="item">\n' +
+							'            <div class="item-heading">\n' +
+							'                <div class="pull-right label label-success news-province">' + news[i].provinceName + '</div>\n' +
+							'                <h4><a href="' + news[i].sourceUrl + '" class="news-title" target="_blank">' + news[i].title + '</a></h4>\n' +
+							'            </div>\n' +
+							'            <div class="item-content news-detail" >。\n' + news[i].summary +
+							'            </div>\n' +
+							'            <div class="item-footer">\n' +
+							'                <a href="#" class="text-muted"><i class="icon-comments news-source"></i> ' + news[i].infoSource + '</a> &nbsp; <span class="text-muted news-time">' + new Date(news[i].pubDate).toLocaleString() + '</span>\n' +
+							'            </div>\n' +
+							'        </div>';
+					}
+
+					$(".items").html(html);
+
+					return;
+				}
+				alert("获取数据失败");
+			},
+			error: function(res) {
+				if(res.state() === "rejected" && !this.url.includes(dataUrlBackup)) {
+					this.url = this.url.replace(dataUrl, dataUrlBackup);
+					$.ajax(this);
+				}
+			}
+		})
+
+	};
+
+	var initChosen = function() {
+		$.ajax({
+			url: dataUrl + 'api/provinceName',  //获取省份信息
+			type: 'get',
+			success: function(res) {
+				if(res.success === true) {
+					var provinces = res.results;
+					var html = '<select data-placeholder="选择一个省份，支持缩写" class="chosen-select form-control" tabindex="2">';
+					for(var i in provinces) {  //将所有省份添加到选择列表
+						if(provinces[i] == "湖北省") {
+							html += '<option value="' + provinces[i] + '" selected="selected">' + provinces[i] + '</option>';  //默认选择湖北省
+						} else {
+							html += '<option value="' + provinces[i] + '">' + provinces[i] + '</option>';
+						}
+					}
+					html += '</select>';
+					$("#provinceChosen").html(html);
+
+					$('select.chosen-select').chosen({
+						no_results_text: '没有找到',  //当检索时没有找到匹配项时显示的提示文本
+						disable_search_threshold: 4,  //4个以下的选择项则不显示检索框
+						search_contains: true  //从任意位置开始检索
+					});
+
+					$('select.chosen-select').on('change', function() {
+						var province = $('select.chosen-select').val();
+						initNews(province);
+						initCoreData(province);
+						initChart(province);
+					});
+
+					return;
+				}
+				alert("获取数据失败");
+			},
+			error: function(res) {  //备用api
+				if(res.state() === "rejected" && !this.url.includes(dataUrlBackup)) {
+					this.url = this.url.replace(dataUrl, dataUrlBackup);
+					$.ajax(this);
+				}
+			}
+		});
+	};
+
+	var initCoreData = function(province) {
+
+		$.ajax({
+			url: dataUrl + 'api/area?latest=1&province=' + province,  //获取province对应的数据
+			type: 'get',
+			success: function(res) {
+				if(res.success === true) {
+					var outBreakData = res.results;  //爆发日期
+					var confirm = 0;  //确诊
+					var suspectedCount = 0;  //疑似
+					var curedCount = 0;  //治愈
+					var deadCount = 0;  //死亡
+
+					// 总数
+					for(var i in outBreakData) {
+						confirm += outBreakData[i].confirmedCount;  //统计总确诊人数
+						suspectedCount += outBreakData[i].suspectedCount;  //总疑似人数
+						curedCount += outBreakData[i].curedCount;  //统计总治愈人数
+						deadCount += outBreakData[i].deadCount;  //统计总死亡人数
+					}
+					var html = ' 疫情数据:\n' +
+						'        <div>' +
+						'<span class="label label-warning data-confirmed">确诊</span>：' + confirm + ' &nbsp;&nbsp;&nbsp; ' +
+						'<span class="label label-success data-cured">治愈</span>：' + curedCount + '  &nbsp;&nbsp;&nbsp; <span class="label label-danger data-dead">死亡</span>：' + deadCount + '</div>\n' +
+						'    ';
+
+					$(".core-data").html   (html);
+
+					// 城市数据
+					var cities = res.results[0].cities;
+					html = "";
+					for(var i in cities) {
+						html += '\n' +
+							' <tr>\n' +
+							' <td>' + cities[i]["cityName"] + '</td>\n' +
+							' <td>' + cities[i]["confirmedCount"] + '</td>\n' +
+							' <td>' + cities[i]["curedCount"] + '</td>\n' +
+							' <td>' + cities[i]["deadCount"] + '</td>\n' +
+							' </tr>\n';
+					}
+					$(".cities-body").html(html);
+					if(province == "") {
+						$(".cities-body").empty();
+					}
+					return;
+				}
+				alert("获取数据失败");
+
+			},
+			error: function(res) {  //备用数据
+				if(res.state() === "rejected" && !this.url.includes(dataUrlBackup)) {
+					this.url = this.url.replace(dataUrl, dataUrlBackup);
+					$.ajax(this);
+				}
+			}
+		})
+
+	};
+
+	var initChart = function(province) {
+		$.ajax({
+			url: dataUrl + 'api/area?latest=0&province=' + province,
+			type: 'get',
+			success: function(res) {
+				if(res.success === true) {
+					var chartData = res.results;
+					var dateTrend = [];
+					var dateAdd = [];
+					var confirm = [];
+					var confirmAdd = [];
+					var datalist = [];
+
+					for(var i in chartData) {
+						var dataTime = new Date(chartData[i].updateTime);
+						var showTime = [dataTime.getFullYear(), dataTime.getMonth() + 1, ("0" + dataTime.getDate()).slice(-2)].join('/');
+						if(dateTrend.includes(showTime)) {
+							continue;
+						}
+						if(!datalist[showTime] || datalist[showTime] < chartData[i].confirmedCount) {
+							datalist[showTime] = chartData[i].confirmedCount;
+						}
+
+					}
+
+					// 时间排序
+					const dataListOrdered = {};
+					Object.keys(datalist).sort((function(a, b) {
+						a = a.split('/').join('');
+						b = b.split('/').join('');
+						return a > b ? 1 : a < b ? -1 : 0;
+					})).forEach(function(key) {
+						dataListOrdered[key] = datalist[key];
+					});
+
+					// 使用数据
+					for(var i in dataListOrdered) {
+						dateTrend.push(i);
+						confirm.push(dataListOrdered[i]);
+
+						var t = new Date(i);
+						t.setDate(t.getDate() - 1);
+						var yesterday = [t.getFullYear(), t.getMonth() + 1, ("0" + t.getDate()).slice(-2)].join('/');
+						if(!dataListOrdered[yesterday]) {
+							continue;
+						}
+
+						dateAdd.push(i);
+						confirmAdd.push(dataListOrdered[i] - dataListOrdered[yesterday]);
+					}
+
+					var title = "确诊总量(" + chartData[0].country + "-" + chartData[0].provinceShortName + ")";
+					initTrendChart(dateTrend, confirm, title);
+
+					title = "确诊增量(" + chartData[0].country + "-" + chartData[0].provinceShortName + ")";
+					initAddChart(dateAdd, confirmAdd, title);
+					return;
+				}
+				alert("获取数据失败");
+			},
+			error: function(res) {
+				if(res.state() === "rejected" && !this.url.includes(dataUrlBackup)) {
+					this.url = this.url.replace(dataUrl, dataUrlBackup);
+					$.ajax(this);
+				}
+			}
+		});
+
+		//确诊总量图
+		var initTrendChart = function(date, confirm, title) {
+			var orderTraceContainer = echarts.init(document.getElementById('trend-chart'));
+			orderTraceContainer.showLoading({
+				text: '加载中...',
+				effect: 'whirling'
+			});
+			
+			echartsOption = {
+				backgroundColor: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+					offset: 0,
+					color: 'black'
+				}, {
+					offset: 1,
+					color: 'black'
+				}], false),
+				title: {
+					text: title,
+					left: "center",
+					bottom: "2%",
+					textStyle: {
+						color: "#fff",
+						fontSize: 16
+					}
+				},
+				tooltip: {
+					trigger: 'axis'
+				},
+				grid: {
+					top: '20%',
+					left: '5%',
+					right: '1%',
+					bottom: '15%',
+					containLabel: true,
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					// 时间
+					data: date,
+					axisLabel: {
+						margin: 30,
+						color: '#ffffff63'
+					},
+					axisLine: {
+						show: false
+					},
+					axisTick: {
+						show: true,
+						length: 25,
+						lineStyle: {
+							color: "#ffffff1f"
+						}
+					},
+					splitLine: {
+						show: true,
+						lineStyle: {
+							color: '#ffffff1f'
+						}
+					}
+				},
+				yAxis: [{
+					type: 'value',
+					position: 'right',
+					axisLabel: {
+						margin: 20,
+						color: '#ffffff63'
+					},
+
+					axisTick: {
+						show: true,
+						length: 15,
+						lineStyle: {
+							color: "#ffffff1f",
+						}
+					},
+					splitLine: {
+						show: true,
+						lineStyle: {
+							color: '#ffffff1f'
+						}
+					},
+					axisLine: {
+						lineStyle: {
+							color: '#fff',
+							width: 2
+						}
+					}
+				}],
+				series: [{
+						name: '总数量',
+						type: 'line',
+						smooth: true, //是否平滑曲线显示
+						showAllSymbol: false,
+						symbol: 'circle',
+						symbolSize: 6,
+						lineStyle: {
+							normal: {
+								color: "red", // 线条颜色
+							},
+						},
+						label: {
+							show: true,
+							position: 'top',
+							textStyle: {
+								color: '#fff',
+							}
+						},
+						itemStyle: {
+							color: "red",
+							borderColor: "#fff",
+							borderWidth: 3
+						},
+						tooltip: {
+							show: true
+						},
+						areaStyle: {
+							normal: {
+								color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+									offset: 0,
+									color: '#eb64fb'
+								}, {
+									offset: 1,
+									color: '#3fbbff0d'
+								}], false),
+							}
+						},
+						data: confirm
+					}
+				]
+			};
+			orderTraceContainer.hideLoading();
+			orderTraceContainer.setOption(echartsOption);
+		}
+
+		//确诊增量图
+		var initAddChart = function(date, confirm, title) {
+			var orderTraceContainer = echarts.init(document.getElementById('add-chart'));
+			orderTraceContainer.showLoading({
+				text: '加载中...',
+				effect: 'whirling'
+			});
+
+			echartsOption = {
+				backgroundColor: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+					offset: 0,
+					color: 'black'
+				}, {
+					offset: 1,
+					color: 'black'
+				}], false),
+				title: {
+					text: title,
+					left: "center",
+					bottom: "2%",
+					textStyle: {
+						color: 'white',
+						fontSize: 16
+					}
+				},
+				grid: {
+					top: '20%',
+					left: '5%',
+					right: '1%',
+					bottom: '15%',
+					containLabel: true,
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					// 时间
+					data: date,
+					axisLabel: {
+						margin: 30,
+						color: '#ffffff63'
+					},
+					axisLine: {
+						show: false
+					},
+					axisTick: {
+						show: true,
+						length: 25,
+						lineStyle: {
+							color: "#ffffff1f"
+						}
+					},
+					splitLine: {
+						show: true,
+						lineStyle: {
+							color: '#ffffff1f'
+						}
+					}
+				},
+				yAxis: [{
+					type: 'value',
+					position: 'right',
+					axisLabel: {
+						margin: 20,
+						color: '#ffffff63'
+					},
+
+					axisTick: {
+						show: true,
+						length: 15,
+						lineStyle: {
+							color: "#ffffff1f",
+						}
+					},
+					splitLine: {
+						show: true,
+						lineStyle: {
+							color: '#ffffff1f'
+						}
+					},
+					axisLine: {
+						lineStyle: {
+							color: '#fff',
+							width: 2
+						}
+					}
+				}],
+				series: [{
+						name: '总数量',
+						type: 'line',
+						smooth: true, //是否平滑曲线显示
+						showAllSymbol: false,
+						symbol: 'circle',
+						symbolSize: 6,
+						color: "#fff", // 线条颜色
+						label: {
+							show: true,
+							position: 'top',
+							textStyle: {
+								color: '#fff',
+							}
+						},
+						itemStyle: {
+							color: "red",
+							borderColor: "#fff",
+							borderWidth: 3
+						},
+						tooltip: {
+							show: true
+						},
+						areaStyle: {
+							normal: {
+								color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+									offset: 0,
+									color: '#eb64fb'
+								}, {
+									offset: 1,
+									color: '#3fbbff0d'
+								}], false),
+							}
+						},
+						data: confirm
+					}
+				]
+			};
+			orderTraceContainer.hideLoading();
+			orderTraceContainer.setOption(echartsOption);
+		}
+
+	};
+</script>
