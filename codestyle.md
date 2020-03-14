@@ -1,4 +1,4 @@
-​	代码规范来源：https://github.com/chjw8016/alibaba-java-style-guide
+代码规范来源[《码出高效_阿里巴巴Java开发手册》](https://github.com/chjw8016/alibaba-java-style-guide)
 
 - 变量命名采用lowerCamelCase驼峰命名法，代码中的命名均不能以下划线或美元符号开始，也不能以下划线或美元符号结束，严禁使用拼音与英文混合的方式，更不允许直接使用中文的方式。
 
